@@ -2,6 +2,7 @@ package com.example.todoapp.service;
 
 import com.example.todoapp.entity.Todo;
 import com.example.todoapp.entity.User;
+import com.example.todoapp.exception.*;
 import com.example.todoapp.repository.TodoRepository;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +20,10 @@ public class TodoService {
         todo.setTitle(todo.getTitle().trim());
         todo.setDescription(todo.getDescription().trim());
         if (todo.getTitle() == null || todo.getTitle().isEmpty()) {
-            throw new RuntimeException("Title is empty");
+            throw new EmptyTitleException();
         }
         if (todoRepository.existsByTitleAndUser(todo.getTitle(),user)) {
-            throw new RuntimeException("That task already exists");
+            throw new TaskExistsException();
         }
         todo.setUser(user);
         todoRepository.save(todo);
@@ -34,15 +35,15 @@ public class TodoService {
 
     public void updateTodo(long id, Todo updatedTodo, User user) {
         if (todoRepository.findByUser(user).isEmpty()) {
-            throw new RuntimeException("Task list is empty");
+            throw new EmptyTaskListException();
         }
-        if (!todoRepository.findById(id).orElseThrow(() -> new RuntimeException("No task with such id.")).getUser().equals(user)) {
-            throw new RuntimeException("Task id don't match with user");
+        if (!todoRepository.findById(id).orElseThrow(() -> new NoTaskWithSuchIDException()).getUser().equals(user)) {
+            throw new TaskIDMismatchWithUserException();
         }
         if (updatedTodo.getTitle() == null || updatedTodo.getTitle().isEmpty()) {
-            throw new RuntimeException("Title is empty");
+            throw new EmptyTitleException();
         }
-        Todo existing =  todoRepository.findById(id).orElseThrow(() ->new RuntimeException("Not found"));
+        Todo existing =  todoRepository.findById(id).orElseThrow(() ->new NoTaskWithSuchIDException());
         if (existing.getUser().equals(user)) {
             existing.setTitle(updatedTodo.getTitle());
             existing.setDescription(updatedTodo.getDescription());
@@ -56,8 +57,8 @@ public class TodoService {
     }
 
     public void deleteTodo(long id, User user) {
-        if (!todoRepository.findById(id).orElseThrow(() -> new RuntimeException("No task with such id.")).getUser().equals(user)) {
-            throw new RuntimeException("User don't contain this task");
+        if (!todoRepository.findById(id).orElseThrow(() -> new NoTaskWithSuchIDException()).getUser().equals(user)) {
+            throw new UserDontContainThisTaskException();
         }
         todoRepository.deleteById(id);
     }

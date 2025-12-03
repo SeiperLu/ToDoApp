@@ -2,6 +2,9 @@ package com.example.todoapp.service;
 
 
 import com.example.todoapp.entity.CustomUserDetails;
+import com.example.todoapp.exception.EmailTakenException;
+import com.example.todoapp.exception.UserNotFoundException;
+import com.example.todoapp.exception.UsernameTakenException;
 import com.example.todoapp.repository.UserRepository;
 import com.example.todoapp.entity.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,19 +27,19 @@ public class UserService implements UserDetailsService {
 
     public void registerUser(User user){
         if (userRepository.findByUsername(user.getUsername()).isPresent()){
-            throw new RuntimeException("Username is already taken");
+            throw new UsernameTakenException();
         }
         if (userRepository.findByEmail(user.getEmail()).isPresent()){
-            throw new RuntimeException("Email is already taken");
+            throw new EmailTakenException();
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username) throws UserNotFoundException {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException());
         return new CustomUserDetails(user);
     }
 }
